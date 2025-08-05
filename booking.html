@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Book Your Spot – Bookie</title>
+  <link rel="stylesheet" href="booking.css" />
+</head>
+<body>
+  <header>
+    <div class="logo">Bookie</div>
+    <div class="profile">
+      <img src="default-profile.jpg" alt="Profile" />
+    </div>
+  </header>
+
+  <main>
+    <h2>Book Your Spot</h2>
+
+    <form id="bookingForm" class="booking-form">
+      <div id="locationGroup" style="display: none;">
+        <label for="location">Select Location</label>
+        <select id="location" name="location" required></select>
+      </div>
+
+      <label for="date">Select Date</label>
+      <input type="date" id="date" name="date" required />
+
+      <label for="time">Select Time</label>
+      <input type="time" id="time" name="time" required />
+
+      <button type="submit">Book Now</button>
+    </form>
+
+    <!-- Booking Success Message -->
+    <div id="successMessage" style="display: none; text-align: center; padding: 60px;">
+      <h1 style="color: green;">✅ Booking Confirmed!</h1>
+      <p id="successText"></p>
+      <a href="index.html" style="margin-top: 20px; display: inline-block; padding: 10px 20px; background: red; color: white; border-radius: 6px; text-decoration: none;">Back to Home</a>
+    </div>
+  </main>
+
+  <!-- Firebase SDK - Module Script -->
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/12.0.0/firebase-app.js";
+    import { getDatabase, ref, push } from "https://www.gstatic.com/firebasejs/12.0.0/firebase-database.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyDly7uSgM4rvPyb8WRn9-8u-cO-qjmFv60",
+      authDomain: "booking-web-7aa07.firebaseapp.com",
+      projectId: "booking-web-7aa07",
+      storageBucket: "booking-web-7aa07.appspot.com",
+      messagingSenderId: "394770573533",
+      appId: "1:394770573533:web:7f035042f7b62280481334",
+      measurementId: "G-MQLBEJ1559",
+      databaseURL: "https://booking-web-7aa07-default-rtdb.firebaseio.com"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getDatabase(app);
+
+    const urlParams = new URLSearchParams(window.location.search);
+    const place = urlParams.get('place');
+
+    const locationGroup = document.getElementById("locationGroup");
+    const locationSelect = document.getElementById("location");
+
+    if (place === "Auditorium") {
+      locationGroup.style.display = "block";
+      locationSelect.innerHTML = `
+        <option value="">-- Select Auditorium --</option>
+        <option value="GP Nexus Auditorium">GP Nexus Auditorium</option>
+        <option value="PG Seminar Hall">PG Seminar Hall</option>
+        <option value="Scholar Seminar Hall">Scholar Seminar Hall</option>
+      `;
+    } else if (place === "Badminton Court") {
+      locationGroup.style.display = "block";
+      locationSelect.innerHTML = `
+        <option value="">-- Select Court --</option>
+        <option value="Court 1">Court 1</option>
+        <option value="Court 2">Court 2</option>
+      `;
+    }
+
+    document.getElementById("bookingForm").addEventListener("submit", function (e) {
+      e.preventDefault();
+
+      const date = document.getElementById("date").value;
+      const time = document.getElementById("time").value;
+      const selectedLocation = place === "Cricket Field" ? "Cricket Field" : locationSelect.value;
+
+      if (!selectedLocation) {
+        alert("Please select a location!");
+        return;
+      }
+
+      const bookingData = {
+        place: selectedLocation,
+        date: date,
+        time: time,
+        timestamp: new Date().toISOString()
+      };
+
+      push(ref(db, "bookings"), bookingData)
+        .then(() => {
+          document.getElementById("bookingForm").style.display = "none";
+          document.getElementById("successMessage").style.display = "block";
+          document.getElementById("successText").innerText =
+            `Your booking for ${selectedLocation} on ${date} at ${time} is successful.`;
+        })
+        .catch(error => {
+          alert("❌ Booking failed: " + error.message);
+        });
+    });
+  </script>
+</body>
+</html>
